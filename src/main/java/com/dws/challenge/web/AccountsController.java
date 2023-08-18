@@ -48,7 +48,6 @@ public class AccountsController {
     return this.accountsService.getAccount(accountId);
   }
   // Create mapping for transferring money
-  @PostMapping(path = "/transfer")
-  public void transferAmount(@RequestBody Account senderAccount)
+
 
 }
