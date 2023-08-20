@@ -1,6 +1,7 @@
 package com.dws.challenge.service;
 
 import com.dws.challenge.domain.Account;
+import com.dws.challenge.model.AccountsModel;
 import com.dws.challenge.repository.AccountsRepository;
 import lombok.Getter;
 
@@ -9,11 +10,12 @@ import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@Getter
 @Service
 public class AccountsService {
 
-  @Getter
   private final AccountsRepository accountsRepository;
+private AccountsModel accountsModel;
 
   @Autowired
   public AccountsService(AccountsRepository accountsRepository) {
@@ -33,6 +35,6 @@ public class AccountsService {
  }
   
   public void transferAmount(String accountFrom, String accountTo, BigDecimal transferAmount) {
-	return this.accountsRepository.transferAmount(accountFrom, accountTo, transferAmount);
+	this.accountsModel.transferAmount(accountFrom, accountTo, transferAmount);
   }
 }

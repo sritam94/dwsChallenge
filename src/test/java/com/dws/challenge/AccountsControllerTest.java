@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.context.WebApplicationContext;
 
 @ExtendWith(SpringExtension.class)
@@ -101,5 +102,16 @@ class AccountsControllerTest {
       .andExpect(status().isOk())
       .andExpect(
         content().string("{\"accountId\":\"" + uniqueAccountId + "\",\"balance\":123.45}"));
+  }
+
+  @Test
+  void transferAmount() throws Exception {
+    Account accountFrom = new Account("ID-1234", new BigDecimal("123.45"));
+    Account accountTo = new Account("ID-2345", new BigDecimal("56.45"));
+    System.out.println(accountFrom+"   "+accountTo);
+    this.accountsService.createAccount(accountFrom);
+    this.accountsService.createAccount(accountTo);
+    this.mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
+            .content("{\"fromAccount\":"+accountFrom.getAccountId()+"\"toAccount\":"+accountTo.getAccountId()+"\"\",\"transferAmount\":40}")).andExpect(status().isNotAcceptable());
   }
 }
