@@ -14,4 +14,6 @@ public interface AccountsRepository {
   BigDecimal getAccountBalance(String accountId);
 
   void clearAccounts();
+
+  void transferAmount(String transferFrom, String transferTO, BigDecimal transferAmount);
 }

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import com.dws.challenge.domain.Account;
@@ -58,6 +59,8 @@ public class AccountsController {
     String fromAccountID = transferRequest.getFromAccountID();
     String toAccountID = transferRequest.getToAccountID();
     BigDecimal transferAmount = transferRequest.getTransferAmount();
-    this.accountsService.transferAmount(fromAccountID,toAccountID,transferAmount);
+    if(!StringUtils.isEmpty(fromAccountID) && !StringUtils.isEmpty(toAccountID) && transferAmount.compareTo(BigDecimal.ZERO)>0) {
+        this.accountsService.transferAmount(fromAccountID,toAccountID,transferAmount);
+    }
   }
 }
