@@ -1,9 +1,13 @@
 package com.dws.challenge.web;
 
+import java.io.ObjectInput;
 import java.math.BigDecimal;
 
 import javax.validation.Valid;
 
+import com.dws.challenge.domain.TransferRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,11 +52,12 @@ public class AccountsController {
   }
   // Create mapping for transferring money
 
-  @PostMapping(path = "/transfer",consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void transferAmount(@RequestParam("accountFrom") String fromAccount, @RequestParam("accountTo") String toAccount, @RequestParam("transerAmount") BigDecimal transferAmount){
+  @PostMapping(path = "/transfer",consumes = "application/JSON")
+  public void transferAmount(@RequestBody TransferRequest transferRequest){
     log.info("transferring the amount");
-    this.accountsService.transferAmount(fromAccount,toAccount,transferAmount);
+    String fromAccountID = transferRequest.getFromAccountID();
+    String toAccountID = transferRequest.getToAccountID();
+    BigDecimal transferAmount = transferRequest.getTransferAmount();
+    this.accountsService.transferAmount(fromAccountID,toAccountID,transferAmount);
   }
-
-
 }

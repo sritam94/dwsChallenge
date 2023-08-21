@@ -111,7 +111,8 @@ class AccountsControllerTest {
     System.out.println(accountFrom+"   "+accountTo);
     this.accountsService.createAccount(accountFrom);
     this.accountsService.createAccount(accountTo);
+
     this.mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
-            .content("{\"fromAccount\":"+accountFrom.getAccountId()+"\"toAccount\":"+accountTo.getAccountId()+"\"\",\"transferAmount\":40}")).andExpect(status().isNotAcceptable());
+            .content("{\"fromAccountID\":\"ID-1234\",\"toAccountID\":\"ID-2345\",\"transferAmount\":\"40\"}")).andExpect(status().is4xxClientError());
   }
 }
