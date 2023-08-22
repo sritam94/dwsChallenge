@@ -2,6 +2,7 @@ package com.dws.challenge.repository;
 
 import com.dws.challenge.domain.Account;
 import com.dws.challenge.exception.DuplicateAccountIdException;
+import com.dws.challenge.service.EmailNotificationService;
 import com.dws.challenge.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -15,7 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AccountsRepositoryInMemory implements AccountsRepository {
 
     private final Map<String, Account> accounts = new ConcurrentHashMap<>();
-    private NotificationService notificationService;
+
+    private NotificationService notificationService = new EmailNotificationService() ;
 
     @Override
     public void createAccount(Account account) throws DuplicateAccountIdException {
@@ -52,8 +54,12 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
         else if(fromAccountBalance.compareTo(transferAmount)<0)
             log.error("Insufficient Funds");
         else{
-            getAccount(transferFrom).setBalance(fromAccountBalance.subtract(transferAmount));
-            getAccount(transferTo).setBalance(toAccountBalance.add(transferAmount));
+            try {
+                getAccount(transferFrom).setBalance(fromAccountBalance.subtract(transferAmount));
+                getAccount(transferTo).setBalance(toAccountBalance.add(transferAmount));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         log.info("Transfer is done");
         String notificationMessageSender = transferAmount.toString()+" has been transferred from your Account to Account No: "+transferTo;
