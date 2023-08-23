@@ -2,6 +2,8 @@ package com.dws.challenge.repository;
 
 import com.dws.challenge.domain.Account;
 import com.dws.challenge.exception.DuplicateAccountIdException;
+import com.dws.challenge.exception.InsufficientFundsException;
+import com.dws.challenge.exception.NegativeBalanceException;
 import com.dws.challenge.service.EmailNotificationService;
 import com.dws.challenge.service.NotificationService;
 import lombok.extern.slf4j.Slf4j;
@@ -48,23 +50,33 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
     public void transferAmount(String transferFrom, String transferTo, BigDecimal transferAmount) {
         BigDecimal fromAccountBalance = getAccountBalance(transferFrom);
         BigDecimal toAccountBalance = getAccountBalance(transferTo);
+        log.info("Balance of Sender Account "+accounts.get(transferFrom).getAccountId()+" Before transfer "+accounts.get(transferFrom).getBalance());
+        log.info("Balance of Receiver Account "+accounts.get(transferTo).getAccountId()+" Before transfer "+accounts.get(transferTo).getBalance());
+
         if (transferAmount.compareTo(BigDecimal.ZERO) < 0) {
             log.error("Please enter a positive Amount");
+            throw new NegativeBalanceException("Please enter a positive amount");
         }
-        else if(fromAccountBalance.compareTo(transferAmount)<0)
+        else if(fromAccountBalance.compareTo(transferAmount)<0) {
             log.error("Insufficient Funds");
+            throw new InsufficientFundsException("Sender does not have enough balance");
+        }
         else{
-            try {
-                getAccount(transferFrom).setBalance(fromAccountBalance.subtract(transferAmount));
-                getAccount(transferTo).setBalance(toAccountBalance.add(transferAmount));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            synchronized (this) {
+                try {
+                    getAccount(transferFrom).setBalance(fromAccountBalance.subtract(transferAmount));
+                    getAccount(transferTo).setBalance(toAccountBalance.add(transferAmount));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
         log.info("Transfer is done");
+        log.info("Balance of Sender Account "+accounts.get(transferFrom).getAccountId()+" After transfer "+accounts.get(transferFrom).getBalance());
+        log.info("Balance of Receiver Account "+accounts.get(transferTo).getAccountId()+" After transfer "+accounts.get(transferTo).getBalance());
         String notificationMessageSender = transferAmount.toString()+" has been transferred from your Account to Account No: "+transferTo;
-        String notificationMessageReciever = transferAmount.toString()+" has been trasnsferred to your Account from Account No: "+transferFrom;
-        notificationService.notifyAboutTransfer(getAccount(transferTo),notificationMessageReciever);
+        String notificationMessageReceiver = transferAmount.toString()+" has been trasnsferred to your Account from Account No: "+transferFrom;
+        notificationService.notifyAboutTransfer(getAccount(transferTo),notificationMessageReceiver);
         notificationService.notifyAboutTransfer(getAccount(transferFrom),notificationMessageSender);
 
     }

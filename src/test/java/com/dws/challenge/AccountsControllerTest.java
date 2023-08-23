@@ -1,6 +1,7 @@
 package com.dws.challenge;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,6 +13,8 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 import java.math.BigDecimal;
 
 import com.dws.challenge.domain.Account;
+import com.dws.challenge.exception.NegativeBalanceException;
+import com.dws.challenge.repository.AccountsRepository;
 import com.dws.challenge.service.AccountsService;
 import com.dws.challenge.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +27,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -115,13 +119,29 @@ class AccountsControllerTest {
     void transferAmount() throws Exception {
         Account accountFrom = new Account("ID-1234", new BigDecimal("123.45"));
         Account accountTo = new Account("ID-2345", new BigDecimal("56.45"));
-
         this.accountsService.createAccount(accountFrom);
         this.accountsService.createAccount(accountTo);
-
-
-
         this.mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"fromAccountID\":\"ID-1234\",\"toAccountID\":\"ID-2345\",\"transferAmount\":\"40\"}")).andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    void transferAmountIsNegative() throws Exception {
+        Account accountFrom = new Account("ID-1234", new BigDecimal("123.45"));
+        Account accountTo = new Account("ID-2345", new BigDecimal("56.45"));
+        this.accountsService.createAccount(accountFrom);
+        this.accountsService.createAccount(accountTo);
+        this.mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"fromAccountID\":\"ID-1234\",\"toAccountID\":\"ID-2345\",\"transferAmount\":\"-40\"}")).andExpect(status().isBadRequest() );
+    }
+
+    @Test
+    void transferAmountIsGreaterThanSenderBalance() throws Exception {
+        Account accountFrom = new Account("ID-1234", new BigDecimal("60.45"));
+        Account accountTo = new Account("ID-2345", new BigDecimal("56.45"));
+        this.accountsService.createAccount(accountFrom);
+        this.accountsService.createAccount(accountTo);
+        this.mockMvc.perform(post("/v1/accounts/transfer").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"fromAccountID\":\"ID-1234\",\"toAccountID\":\"ID-2345\",\"transferAmount\":\"80\"}")).andExpect(status().isBadRequest() );
     }
 }

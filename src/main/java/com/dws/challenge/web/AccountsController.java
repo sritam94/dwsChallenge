@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import javax.validation.Valid;
 
 import com.dws.challenge.domain.TransferRequest;
+import com.dws.challenge.exception.InsufficientFundsException;
+import com.dws.challenge.exception.NegativeBalanceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,13 +56,27 @@ public class AccountsController {
   // Create mapping for transferring money
 
   @PostMapping(path = "/transfer",consumes = "application/JSON")
-  public void transferAmount(@RequestBody TransferRequest transferRequest){
+  public ResponseEntity<Object> transferAmount(@RequestBody TransferRequest transferRequest) throws NegativeBalanceException{
     log.info("transferring the amount");
+
     String fromAccountID = transferRequest.getFromAccountID();
     String toAccountID = transferRequest.getToAccountID();
     BigDecimal transferAmount = transferRequest.getTransferAmount();
-    if(!StringUtils.isEmpty(fromAccountID) && !StringUtils.isEmpty(toAccountID) && transferAmount.compareTo(BigDecimal.ZERO)>0) {
-        this.accountsService.transferAmount(fromAccountID,toAccountID,transferAmount);
+
+
+      if (!StringUtils.isEmpty(fromAccountID) && !StringUtils.isEmpty(toAccountID)) {
+        try {
+          this.accountsService.transferAmount(fromAccountID, toAccountID, transferAmount);
+        }
+        catch(NegativeBalanceException nbe){
+          return new ResponseEntity<>(nbe.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        catch(InsufficientFundsException ife){
+          return new ResponseEntity<>(ife.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+      }
+      return new ResponseEntity<>(HttpStatus.CREATED);
     }
-  }
+
+
 }
